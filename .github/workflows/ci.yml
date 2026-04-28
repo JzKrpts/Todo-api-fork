@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Security best practice: Minimal permissions
+permissions:
+  contents: read
+
+jobs:
+  # Linting (Fast failure)
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run Ruff
+        run: uv run ruff check .
+
+      - name: Run Mypy
+        env:
+          PYTHONPATH: .
+          SECRET_KEY: "ci-dummy-key"
+          DATABASE_URL: "sqlite:///:memory:"
+        run: uv run mypy .
+
+  # JOB 2: Testing (Runs at the same time as Lint)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run Tests
+        env:
+          SECRET_KEY: "ci-dummy-key"
+        run: uv run python manage.py test
