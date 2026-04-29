@@ -50,6 +50,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Run Tests
+        working-directory: backend
         env:
           SECRET_KEY: "ci-dummy-key"
           ALLOWED_HOSTS: "localhost"
